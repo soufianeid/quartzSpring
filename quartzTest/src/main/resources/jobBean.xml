@@ -26,7 +26,7 @@
         <!-- Reference to the job bean that will be triggered: -->
         <property name="jobDetail" ref="myJob"/>
         <!-- Cron expression, usually comes from a property -->
-        <property name="cronExpression" value="0 38 13 ? * MON-FRI"/>
+        <property name="cronExpression" value="20 25 19 ? * MON-FRI"/>
         <!-- What to do if the job has missed its time
              because the previous job was running for too long.
              Usually, it's OK to do nothing, but Quartz has other strategies as well,

@@ -10,15 +10,15 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
-import com.service.IMetier;
+import com.service.IService;
 
 @Component("service")
 @DisallowConcurrentExecution
 public class MyJob extends QuartzJobBean implements Serializable{
 
-	private IMetier service;
+	private IService service;
 	
-	public void setMetier(IMetier service) {
+	public void setMetier(IService service) {
 		this.service = service;
 	}
 	
@@ -37,7 +37,7 @@ public class MyJob extends QuartzJobBean implements Serializable{
 	@Override
 	protected void executeInternal(JobExecutionContext arg0) throws JobExecutionException {
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
-		// service.sayHello();
+		 service.sayHello();
 		System.out.println("My job is running with "+someParam+' '+someParam2);
 	}
 }
