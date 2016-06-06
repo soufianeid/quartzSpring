@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+    
+<bean id="myJob" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+    <property name="jobClass" value="com.example.MyJob"/>
+    <property name="jobDataAsMap">
+        <map>
+            <entry key="someParam" value="some value"/>
+            <entry key="someParam2" value="1"/>
+            	<entry key="service" value-ref="service" />
+        </map>
+    </property>
+    <property name="durability" value="true" />
+</bean>
+
+<util:list id="quartzTriggers">
+    <bean class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <!-- Reference to the job bean that will be triggered: -->
+        <property name="jobDetail" ref="myJob"/>
+        <!-- Cron expression, usually comes from a property -->
+        <property name="cronExpression" value="0 38 13 ? * MON-FRI"/>
+        <!-- What to do if the job has missed its time
+             because the previous job was running for too long.
+             Usually, it's OK to do nothing, but Quartz has other strategies as well,
+             notably 'MISFIRE_INSTRUCTION_FIRE_ONCE_NOW' -->
+        <property name="misfireInstruction"
+            value="#{T(org.quartz.CronTrigger).MISFIRE_INSTRUCTION_DO_NOTHING}"/>
+            </bean>
+</util:list>
+
+
+<!-- Our 'AutowiringSpringBeanJobFactory' implemented in the previous section: -->
+<bean id="quartzJobFactory" class="com.example.AutowiringSpringBeanJobFactory">
+    <!-- I will not explain this setting, just use it as shown: -->
+    <property name="ignoredUnknownProperties" value="applicationContext"/>
+</bean>    
+
+<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+    <!-- Quartz requires a separate 'quartz.properties' file -->
+    <property name="configLocation" value="classpath:quartz.properties"/>
+
+    <!-- Naturally, Quartz with the DB requires references 
+          to the data source and transaction manager beans -->
+    <property name="dataSource" ref="dataSource"/>
+    <property name="transactionManager" ref="transactionManager"/>
+
+    <!-- reference to our 'autowiring job factory bean', defined above: -->
+    <property name="jobFactory" ref="quartzJobFactory"/>
+
+    <!-- I will not explain the next three properties, just use it as shown: -->
+    <property name="autoStartup" value="true" />
+    <property name="schedulerName" value="quartzScheduler"/>
+    <property name="applicationContextSchedulerContextKey" value="applicationContext"/>
+
+
+    <!-- Tell the Quartz scheduler about the triggers. 
+          We have implemented the 'quartzTriggers' bean in the 'Jobs and triggers' section.
+          No need to pass job definitions, since triggers created via Spring know their jobs.
+          Later we'll see a case when we'll have to disable this and pass the jobs explicitly.-->
+    <property name="triggers" ref="quartzTriggers"/>
+</bean>
+
+
+</beans>
